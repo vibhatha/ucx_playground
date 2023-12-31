@@ -22,3 +22,4 @@ function(create_target target_name source_files)
 endfunction()
 
 create_target(main "src/main.cpp")
+create_target(hello_ucx "src/hello_ucx.cpp")
