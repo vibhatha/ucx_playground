@@ -22,3 +22,4 @@ endfunction()
 
 create_target(main "src/main.cpp")
 create_target(hello_ucx "src/hello_ucx.cpp")
+create_target(hello_ucp "src/ucp_hello_world.c")
