@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/epoll.h>
 
@@ -32,8 +33,8 @@ int main() {
         perror("epoll_ctl");
         exit(EXIT_FAILURE);
     }
-
-    while (1) {
+    int is_exit = 1;
+    while (is_exit) {
         // Wait for events
         num_events = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
         printf("num_events: %d\n", num_events);
@@ -49,7 +50,13 @@ int main() {
                 char buffer[256];
                 fgets(buffer, sizeof(buffer), stdin);
                 printf("You entered: %s", buffer);
+                if (strcmp(buffer, "exit\n") == 0) {
+                    printf("Exiting program\n");
+                    close(epoll_fd);
+                    is_exit = 0;
+                }
             }
+                
         }
     }
 
