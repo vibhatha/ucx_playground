@@ -21,11 +21,11 @@
  *
  * Server side:
  *
- *    ./ucp_hello_world
+ *    ./hello_ucp
  *
  * Client side:
  *
- *    ./ucp_hello_world -n <server host name>
+ *    ./hello_ucp -n 0.0.0.0
  *
  * Notes:
  *
@@ -86,7 +86,7 @@ static struct err_handling {
 
 static ucs_status_t ep_status   = UCS_OK;
 static uint16_t server_port     = 13337;
-static sa_family_t ai_family    = AF_INET;
+static sa_family_t ai_family    = AF_INET; // AF_INET is a constant that represents the Internet Protocol v4 address family
 static long test_string_length  = 4;
 static const ucp_tag_t tag      = 0x1337a880u;
 static const ucp_tag_t tag_mask = UINT64_MAX;
@@ -142,6 +142,15 @@ static void recv_handler(void *request, ucs_status_t status,
            info->length);
 }
 
+/**
+ * @file ucp_hello_world.c
+ * @brief This file contains the implementation of the ucx_wait function.
+ *        The ucx_wait function waits for a UCX request to complete on a given UCX worker.
+ * 
+ * @param ucp_worker The UCX worker on which the request is being waited for.
+ * @param request The UCX context representing the request to be waited for.
+ * @return The status of the UCX request.
+ */
 static ucs_status_t ucx_wait(ucp_worker_h ucp_worker, struct ucx_context *request,
                              const char *op_str, const char *data_str)
 {
@@ -298,6 +307,7 @@ static int run_ucx_client(ucp_worker_h ucp_worker,
     for (;;) {
         CHKERR_JUMP(ep_status != UCS_OK, "receive data: EP disconnected\n", err_ep);
         /* Probing incoming events in non-block mode */
+        /* note that the `tag` and `tag_mask` are predefined in the var initialization */
         msg_tag = ucp_tag_probe_nb(ucp_worker, tag, tag_mask, 1, &info_tag);
         if (msg_tag != NULL) {
             /* Message arrived */
@@ -368,6 +378,15 @@ err:
     return ret;
 }
 
+/**
+ * @brief Flushes the endpoint.
+ *
+ * This function flushes the specified endpoint on the given worker.
+ *
+ * @param worker The UCP worker handle.
+ * @param ep The UCP endpoint handle.
+ * @return The status of the flush operation.
+ */
 static ucs_status_t flush_ep(ucp_worker_h worker, ucp_ep_h ep)
 {
     ucp_request_param_t param;
@@ -390,6 +409,15 @@ static ucs_status_t flush_ep(ucp_worker_h worker, ucp_ep_h ep)
     }
 }
 
+/**
+ * @brief Runs the UCX server.
+ *
+ * This function is responsible for running the UCX server using the provided
+ * UCX worker handle.
+ *
+ * @param ucp_worker The UCX worker handle.
+ * @return Returns an integer indicating the status of the server.
+ */
 static int run_ucx_server(ucp_worker_h ucp_worker)
 {
     struct msg *msg             = NULL;
@@ -399,8 +427,8 @@ static int run_ucx_server(ucp_worker_h ucp_worker)
     ucp_tag_recv_info_t info_tag;
     ucp_tag_message_h msg_tag;
     ucs_status_t status;
-    ucp_ep_h client_ep;
-    ucp_ep_params_t ep_params;
+    ucp_ep_h client_ep; // handle to an endpoint
+    ucp_ep_params_t ep_params; // The structure defines the parameters that are used for the UCP endpoint tuning during the UCP ep creation. 
     ucp_address_t *peer_addr;
     size_t peer_addr_len;
 
@@ -412,16 +440,26 @@ static int run_ucx_server(ucp_worker_h ucp_worker)
         ucp_worker_progress(ucp_worker);
 
         /* Probing incoming events in non-block mode */
+        /* note that the `tag` and `tag_mask` are predefined in the var initialization */
         msg_tag = ucp_tag_probe_nb(ucp_worker, tag, tag_mask, 1, &info_tag);
     } while (msg_tag == NULL);
 
+    printf("Allocating memory for message: %lu\n", info_tag.length);
     msg = malloc(info_tag.length);
+    
     CHKERR_ACTION(msg == NULL, "allocate memory\n", ret = -1; goto err);
+
+    /*
+    UCP_OP_ATTR_FIELD_CALLBACK flag indicates that a callback function is provided, 
+    UCP_OP_ATTR_FIELD_DATATYPE flag indicates that a datatype is provided, and 
+    UCP_OP_ATTR_FLAG_NO_IMM_CMPL flag indicates that the operation should not be 
+    considered complete immediately (it requires further progression).
+    */
 
     recv_param.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK |
                               UCP_OP_ATTR_FIELD_DATATYPE |
                               UCP_OP_ATTR_FLAG_NO_IMM_CMPL;
-    recv_param.datatype     = ucp_dt_make_contig(1);
+    recv_param.datatype     = ucp_dt_make_contig(1); // create a datatype that represents a contiguous block of memory, with 1 indicating that each element is 1 byte
     recv_param.cb.recv      = recv_handler;
 
     request = ucp_tag_msg_recv_nbx(ucp_worker, msg, info_tag.length,
@@ -451,8 +489,11 @@ static int run_ucx_server(ucp_worker_h ucp_worker)
         goto err;
     }
 
+    // msg + 1 syntax is pointer arithmetic that gets a pointer to the memory location 
+    // immediately after the msg structure, which is where the address data is presumably store
+    printf("Copying peer address from message length: %lu\n", msg->data_len);
     memcpy(peer_addr, msg + 1, peer_addr_len);
-
+    
     free(msg);
 
     /* Send test string to client */
@@ -481,12 +522,17 @@ static int run_ucx_server(ucp_worker_h ucp_worker)
     ret = generate_test_string((char *)(msg + 1), test_string_length);
     CHKERR_JUMP(ret < 0, "generate test string", err_free_mem_type_msg);
 
+    printf("Test String to be sent: %s\n", (char *)(msg + 1));
+
     if (err_handling_opt.failure_mode == FAILURE_MODE_RECV) {
+        // FIXME: This is not a better way to handle this. Probably we should
+        // busy loop here and check. 
         /* Sleep for small amount of time to ensure that client was killed
          * and peer failure handling is covered */
         sleep(5);
     }
 
+    // This is typically done in a loop to ensure that all pending communications are processed.
     ucp_worker_progress(ucp_worker);
 
     send_param.op_attr_mask = UCP_OP_ATTR_FIELD_CALLBACK  |
@@ -612,11 +658,17 @@ int main(int argc, char **argv)
     printf("[0x%x] local address length: %lu\n",
            (unsigned int)pthread_self(), local_addr_len);
 
-    /* OOB connection establishment */
+    /* OOB (Out-Of-Band) connection establishment */
     if (client_target_name != NULL) {
+        /*
+        1. receiving the length of a peer's address
+        2. allocating memory to hold the address
+        3. then receiving the actual address
+        */
         oob_sock = connect_common(client_target_name, server_port, ai_family);
         CHKERR_JUMP(oob_sock < 0, "client_connect\n", err_addr);
 
+        printf("Client: Receiving Address length\n");
         ret = recv(oob_sock, &peer_addr_len, sizeof(peer_addr_len), MSG_WAITALL);
         CHKERR_JUMP_RETVAL(ret != (int)sizeof(peer_addr_len),
                            "receive address length\n", err_addr, ret);
@@ -624,27 +676,31 @@ int main(int argc, char **argv)
         peer_addr = malloc(peer_addr_len);
         CHKERR_JUMP(!peer_addr, "allocate memory\n", err_addr);
 
+        printf("Client: Receiving Address\n");
         ret = recv(oob_sock, peer_addr, peer_addr_len, MSG_WAITALL);
         CHKERR_JUMP_RETVAL(ret != (int)peer_addr_len,
                            "receive address\n", err_peer_addr, ret);
     } else {
         oob_sock = connect_common(NULL, server_port, ai_family);
         CHKERR_JUMP(oob_sock < 0, "server_connect\n", err_peer_addr);
-
+        printf("Server: Sending Address length\n");
         ret = send(oob_sock, &local_addr_len, sizeof(local_addr_len), 0);
         CHKERR_JUMP_RETVAL(ret != (int)sizeof(local_addr_len),
                            "send address length\n", err_peer_addr, ret);
-
+        
+        printf("Server: Sending Address\n");
         ret = send(oob_sock, local_addr, local_addr_len, 0);
         CHKERR_JUMP_RETVAL(ret != (int)local_addr_len, "send address\n",
                            err_peer_addr, ret);
     }
 
     if (client_target_name != NULL) {
+        printf("Ready to run UCX Client\n");
         ret = run_ucx_client(ucp_worker,
                              local_addr, local_addr_len,
                              peer_addr, peer_addr_len);
     } else {
+        printf("Ready to run UCX Server\n");
         ret = run_ucx_server(ucp_worker);
     }
 

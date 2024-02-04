@@ -64,6 +64,14 @@ static ucs_memory_type_t test_mem_type = UCS_MEMORY_TYPE_HOST;
 
 void print_common_help(void);
 
+/**
+ * @brief Allocates memory of a specified length.
+ *
+ * This function allocates memory of the specified length and returns a pointer to the allocated memory.
+ *
+ * @param length The length of the memory to allocate.
+ * @return A pointer to the allocated memory.
+ */
 void *mem_type_malloc(size_t length)
 {
     void *ptr;
@@ -107,6 +115,17 @@ void mem_type_free(void *address)
     }
 }
 
+/**
+ * @brief Copies a block of memory from a source address to a destination address.
+ *
+ * This function copies the memory block specified by the source address `src` to the destination
+ * address `dst`. The number of bytes to be copied is specified by the `count` parameter.
+ *
+ * @param dst Pointer to the destination address where the memory will be copied to.
+ * @param src Pointer to the source address from where the memory will be copied from.
+ * @param count Number of bytes to be copied.
+ * @return Pointer to the destination address `dst`.
+ */
 void *mem_type_memcpy(void *dst, const void *src, size_t count)
 {
     switch (test_mem_type) {
@@ -127,6 +146,14 @@ void *mem_type_memcpy(void *dst, const void *src, size_t count)
     return dst;
 }
 
+/**
+ * @brief Sets the memory pointed to by 'dst' to the specified 'value' for 'count' number of bytes.
+ *
+ * @param dst Pointer to the memory to be set.
+ * @param value The value to be set (converted to unsigned char).
+ * @param count Number of bytes to be set.
+ * @return Pointer to the memory area 'dst'.
+ */
 void *mem_type_memset(void *dst, int value, size_t count)
 {
     switch (test_mem_type) {
@@ -199,6 +226,18 @@ void print_common_help()
     }
 }
 
+/**
+ * @brief Connects to a server or sets up a server socket based on the provided parameters.
+ *
+ * This function creates a socket and attempts to connect to a server if the `server` parameter is not NULL.
+ * If the `server` parameter is NULL, it sets up a server socket by binding to the specified address and port,
+ * and waits for a client to connect.
+ *
+ * @param server The server address to connect to. Set to NULL to set up a server socket.
+ * @param server_port The port number of the server.
+ * @param af The address family (e.g., AF_INET, AF_INET6) to use for the socket.
+ * @return The socket file descriptor on success, or -1 on failure.
+ */
 int connect_common(const char *server, uint16_t server_port, sa_family_t af)
 {
     int sockfd   = -1;
@@ -214,32 +253,57 @@ int connect_common(const char *server, uint16_t server_port, sa_family_t af)
     hints.ai_family   = af;
     hints.ai_socktype = SOCK_STREAM;
 
+    /*  
+    Used in network programming to convert human-readable text strings 
+    representing hostnames or IP addresses into a dynamically allocated linked list of struct addrinfo structures
+    */
     ret = getaddrinfo(server, service, &hints, &res);
     CHKERR_JUMP(ret < 0, "getaddrinfo() failed", out);
-
+    int socked_estb_counter = 0;
     for (t = res; t != NULL; t = t->ai_next) {
+        printf("Socket Established: %d\n", socked_estb_counter++);
+        /**
+        calling the socket function to create a new socket with the specified 
+        address family, socket type, and protocol. The socket file descriptor for this new socket is stored in the sockfd variable.
+        */
         sockfd = socket(t->ai_family, t->ai_socktype, t->ai_protocol);
         if (sockfd < 0) {
             continue;
         }
 
         if (server != NULL) {
+            printf("Server Name: %s\n", server);
+            printf("Attempting to connect as a Client\n");
             if (connect(sockfd, t->ai_addr, t->ai_addrlen) == 0) {
                 break;
             }
         } else {
+            printf("Attemping to Connect as a Server\n");
+            /*
+            set the SO_REUSEADDR option for the socket referred to by sockfd. This allows the socket to reuse its local address,
+            which can help avoid "address already in use" errors
+            */
             ret = setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval,
                              sizeof(optval));
             CHKERR_JUMP(ret < 0, "server setsockopt()", err_close_sockfd);
 
             if (bind(sockfd, t->ai_addr, t->ai_addrlen) == 0) {
+                printf("Bind Successful\n");
                 ret = listen(sockfd, 0);
                 CHKERR_JUMP(ret < 0, "listen server", err_close_sockfd);
 
                 /* Accept next connection */
                 fprintf(stdout, "Waiting for connection...\n");
                 listenfd = sockfd;
+                /* program blocks here until a connection is accepted*/
+                /*
+                    Waits for a client to make a connection request.
+                    When a connection request is made, the accept function creates a new socket for the connection and 
+                    returns the socket file descriptor. This new socket is used for communication with the client.
+                */
                 sockfd   = accept(listenfd, NULL, NULL);
+                printf("Accepting a connection: %d\n", listenfd);
+                /*closes the listening socket. After a connection has been accepted, the listening socket is no longer needed.*/
                 close(listenfd);
                 break;
             }
@@ -289,6 +353,15 @@ barrier(int oob_sock, void (*progress_cb)(void *arg), void *arg)
     return !(res == sizeof(dummy));
 }
 
+/**
+ * Generates a test string.
+ *
+ * This function generates a test string and stores it in the provided character array.
+ *
+ * @param str The character array to store the generated string.
+ * @param size The size of the character array.
+ * @return The length of the generated string.
+ */
 static inline int generate_test_string(char *str, int size)
 {
     char *tmp_str;
