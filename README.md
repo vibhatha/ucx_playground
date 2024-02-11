@@ -47,3 +47,13 @@ Terminal 2: Running client
 cd cpp/build
 ./hello_ucp -n 0.0.0.0
 ```
+
+## Server/Client Progam
+
+```bash
+./run_ucp_server
+```
+
+```bash
+./run_ucp_client -n 0.0.0.0
+```
