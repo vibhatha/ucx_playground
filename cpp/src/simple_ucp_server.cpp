@@ -116,7 +116,8 @@ int main(int argc, char **argv) {
         CHKERR_JUMP_RETVAL(ret != (int)local_addr_len, "send address\n",
                            err_peer_addr, ret);
         UcpServer ucpServer(ucp_worker);
-        ret = ucpServer.runServer(data_msg_str, addr_msg_str, tag, tag_mask, test_string_length, err_handling_opt);
+        ret = ucpServer.runServer(data_msg_str, addr_msg_str, tag, tag_mask, test_string_length,
+                                  err_handling_opt);
     }
 
     if (!ret && (err_handling_opt.failure_mode == FAILURE_MODE_NONE)) {
