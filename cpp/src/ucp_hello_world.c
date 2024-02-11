@@ -272,6 +272,8 @@ static int run_ucx_client(ucp_worker_h ucp_worker,
     ep_params.err_handler.arg = NULL;
     ep_params.user_data       = &ep_status;
 
+    printf("err_handling_opt.ucp_err_mode: %d", err_handling_opt.ucp_err_mode);
+
     status = ucp_ep_create(ucp_worker, &ep_params, &server_ep);
     CHKERR_JUMP(status != UCS_OK, "ucp_ep_create\n", err);
 

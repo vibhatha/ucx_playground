@@ -70,7 +70,7 @@ int UcpClient::runUcxClient(const char *data_msg_str, const char *addr_msg_str, 
     char *str;
     ucp_test_mode_t ucp_test_mode = TEST_MODE_PROBE;
     struct err_handling err_handling_opt;
-    err_handling_opt.ucp_err_mode = UCP_ERR_HANDLING_MODE_PEER;
+    err_handling_opt.ucp_err_mode = UCP_ERR_HANDLING_MODE_NONE;
 
     /* Send client UCX address to server */
     ep_params.field_mask      = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS |
