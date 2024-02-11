@@ -3,13 +3,14 @@
 //
 
 #include "ucp_client.h"
+#include "ucx_utils.h"
 #include "ucx_config.h"
-#include "ucx_handlers.h"
+#include "memory_utils.h"
+#include "common_utils.h"
 
 #include <errno.h>   /* errno */
 #include <stdlib.h>
 #include <signal.h>  /* raise */
-#include <sys/socket.h>
 #include <sys/epoll.h>
 
 ucs_status_t UcpClient::test_poll_wait(ucp_worker_h ucp_worker) {
@@ -67,6 +68,8 @@ int UcpClient::runUcxClient(const char *data_msg_str, const char *addr_msg_str, 
     ucp_ep_params_t ep_params;
     struct ucx_context *request;
     char *str;
+    ucp_test_mode_t ucp_test_mode = TEST_MODE_PROBE;
+    struct err_handling err_handling_opt;
 
     /* Send client UCX address to server */
     ep_params.field_mask      = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS |

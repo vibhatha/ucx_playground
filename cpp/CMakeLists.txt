@@ -16,16 +16,23 @@ include_directories(${UCX_INCLUDE_DIRS})
 
 # Add your header files into a variable
 set(HEADER_FILES
-    src/ucp_client.h
-    src/ucx_config.h
-    src/ucx_handlers.h
-    src/ucx_utils.h
-    # Add other header files here
+        src/common_utils.h
+        src/memory_utils.h
+        src/ucx_utils.h
+        src/data_util.h
+        src/ucx_config.h
+        src/ucp_client.h
+        src/ucp_server.h
 )
 
 set(SOURCE_FILES
-    src/ucp_client.cpp
-    # Add other source files here
+        src/data_util.cpp
+        src/memory_utils.cpp
+        src/ucx_config.cpp
+        src/ucx_utils.cpp
+        src/ucp_client.cpp
+        src/ucp_server.cpp
+        # Add other source files here
 )
 
 add_library(my_ucx_lib SHARED ${SOURCE_FILES})
@@ -43,6 +50,6 @@ endfunction()
 
 create_target(main "src/main.cpp")
 create_target(hello_ucx "src/hello_ucx.cpp")
-create_target(hello_ucp "src/ucp_hello_world.c")
+# create_target(hello_ucp "src/ucp_hello_world.c")
 create_target(hello_epoll "src/hello_epoll.c")
 create_target(ucp_hello_v2 "src/ucp_hello_world_v2.cpp")
