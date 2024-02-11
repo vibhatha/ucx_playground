@@ -4,7 +4,6 @@
 
 #include "ucp_client.h"
 #include "ucx_utils.h"
-#include "ucx_config.h"
 #include "memory_utils.h"
 #include "common_utils.h"
 
@@ -55,7 +54,7 @@ ucs_status_t UcpClient::test_poll_wait(ucp_worker_h ucp_worker) {
 }
 
 int UcpClient::runUcxClient(const char *data_msg_str, const char *addr_msg_str, long send_msg_length,
-                            const ucp_tag_t tag, const ucp_tag_t tag_mask) {
+                            const ucp_tag_t tag, const ucp_tag_t tag_mask, err_handling err_handling_opt) {
     ucs_status_t ep_status   = UCS_OK;
     struct msg *msg = NULL;
     size_t msg_len  = 0;
@@ -69,8 +68,7 @@ int UcpClient::runUcxClient(const char *data_msg_str, const char *addr_msg_str, 
     struct ucx_context *request;
     char *str;
     ucp_test_mode_t ucp_test_mode = TEST_MODE_PROBE;
-    struct err_handling err_handling_opt;
-    err_handling_opt.ucp_err_mode = UCP_ERR_HANDLING_MODE_NONE;
+
 
     /* Send client UCX address to server */
     ep_params.field_mask      = UCP_EP_PARAM_FIELD_REMOTE_ADDRESS |

@@ -41,29 +41,20 @@
 #include <ucp/api/ucp.h>
 
 #include <sys/socket.h>
-#include <sys/types.h>
 #include <sys/epoll.h>
-#include <netinet/in.h>
-#include <assert.h>
-#include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>  /* getopt */
 #include <pthread.h> /* pthread_self */
-#include <errno.h>   /* errno */
-#include <time.h>
-#include <signal.h>  /* raise */
 
 #include "ucp_client.h"
 #include "ucx_config.h"
 #include "ucx_utils.h"
-#include "data_util.h"
 #include "memory_utils.h"
 #include "common_utils.h"
 #include "ucp_server.h"
 
-static ucs_status_t ep_status   = UCS_OK;
 static uint16_t server_port     = 13337;
 static sa_family_t ai_family    = AF_INET; // AF_INET is a constant that represents the Internet Protocol v4 address family
 static long test_string_length  = 4;
@@ -73,7 +64,8 @@ static const char *addr_msg_str = "UCX address message";
 static const char *data_msg_str = "UCX data message";
 static int print_config         = 0;
 
-static ucs_status_t parse_cmd(int argc, char * const argv[], char **server_name);
+static ucs_status_t parse_cmd(int argc, char * const argv[], char **server_name, err_handling* err_handling_opt,
+                              ucp_test_mode_t* ucp_test_mode);
 
 void set_msg_data_len(struct msg *msg, uint64_t data_len)
 {
@@ -115,7 +107,7 @@ int main(int argc, char **argv)
     memset(&worker_params, 0, sizeof(worker_params));
 
     /* Parse the command line */
-    status = parse_cmd(argc, argv, &client_target_name);
+    status = parse_cmd(argc, argv, &client_target_name, &err_handling_opt, &ucp_test_mode);
     CHKERR_JUMP(status != UCS_OK, "parse_cmd\n", err);
 
     /* UCP initialization */
@@ -197,14 +189,12 @@ int main(int argc, char **argv)
 
     if (client_target_name != NULL) {
         printf("Ready to run UCX Client\n");
-        UcpClient ucpClient(ucp_worker,
-                            local_addr, local_addr_len,
-                            peer_addr, peer_addr_len);
-        ret = ucpClient.runUcxClient(data_msg_str, addr_msg_str, test_string_length, tag, tag_mask);
+        UcpClient ucpClient(ucp_worker, local_addr, local_addr_len, peer_addr);
+        ret = ucpClient.runUcxClient(data_msg_str, addr_msg_str, test_string_length, tag, tag_mask, err_handling_opt);
     } else {
         printf("Ready to run UCX Server\n");
         UcpServer ucpServer(ucp_worker);
-        ret = ucpServer.runServer(data_msg_str, addr_msg_str, tag, tag_mask, test_string_length);
+        ret = ucpServer.runServer(data_msg_str, addr_msg_str, tag, tag_mask, test_string_length, err_handling_opt);
     }
 
     if (!ret && (err_handling_opt.failure_mode == FAILURE_MODE_NONE)) {
@@ -271,34 +261,32 @@ static void print_usage()
     fprintf(stderr, "\n");
 }
 
-ucs_status_t parse_cmd(int argc, char * const argv[], char **server_name)
+ucs_status_t parse_cmd(int argc, char * const argv[], char **server_name, err_handling* err_handling_opt, ucp_test_mode_t* ucp_test_mode)
 {
     int c = 0, idx = 0;
-    struct err_handling err_handling_opt;
-    ucp_test_mode_t ucp_test_mode;
 
-    err_handling_opt.ucp_err_mode = UCP_ERR_HANDLING_MODE_NONE;
-    err_handling_opt.failure_mode = FAILURE_MODE_NONE;
+    (*err_handling_opt).ucp_err_mode = UCP_ERR_HANDLING_MODE_NONE;
+    (*err_handling_opt).failure_mode = FAILURE_MODE_NONE;
 
     while ((c = getopt(argc, argv, "wfb6e:n:p:s:m:ch")) != -1) {
         switch (c) {
             case 'w':
-                ucp_test_mode = TEST_MODE_WAIT;
+                *ucp_test_mode = TEST_MODE_WAIT;
                 break;
             case 'f':
-                ucp_test_mode = TEST_MODE_EVENTFD;
+                *ucp_test_mode = TEST_MODE_EVENTFD;
                 break;
             case 'b':
-                ucp_test_mode = TEST_MODE_PROBE;
+                *ucp_test_mode = TEST_MODE_PROBE;
                 break;
             case 'e':
-                err_handling_opt.ucp_err_mode = UCP_ERR_HANDLING_MODE_PEER;
+                (*err_handling_opt).ucp_err_mode = UCP_ERR_HANDLING_MODE_PEER;
                 if (!strcmp(optarg, "recv")) {
-                    err_handling_opt.failure_mode = FAILURE_MODE_RECV;
+                    (*err_handling_opt).failure_mode = FAILURE_MODE_RECV;
                 } else if (!strcmp(optarg, "send")) {
-                    err_handling_opt.failure_mode = FAILURE_MODE_SEND;
+                    (*err_handling_opt).failure_mode = FAILURE_MODE_SEND;
                 } else if (!strcmp(optarg, "keepalive")) {
-                    err_handling_opt.failure_mode = FAILURE_MODE_KEEPALIVE;
+                    (*err_handling_opt).failure_mode = FAILURE_MODE_KEEPALIVE;
                 } else {
                     print_usage();
                     return UCS_ERR_UNSUPPORTED;
@@ -340,7 +328,7 @@ ucs_status_t parse_cmd(int argc, char * const argv[], char **server_name)
         }
     }
     fprintf(stderr, "INFO: UCP_HELLO_WORLD mode = %d server = %s port = %d, pid = %d\n",
-            ucp_test_mode, *server_name, server_port, getpid());
+            *ucp_test_mode, *server_name, server_port, getpid());
 
     for (idx = optind; idx < argc; idx++) {
         fprintf(stderr, "WARNING: Non-option argument %s\n", argv[idx]);

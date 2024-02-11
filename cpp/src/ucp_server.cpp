@@ -18,7 +18,7 @@ void UcpServer::set_msg_data_len(struct msg *msg, uint64_t data_len) {
 }
 
 int UcpServer::runServer(const char *data_msg_str, const char *addr_msg_str, const ucp_tag_t tag,
-                         const ucp_tag_t tag_mask, long send_msg_length) {
+                         const ucp_tag_t tag_mask, long send_msg_length, err_handling err_handling_opt) {
     struct msg *msg             = NULL;
     struct ucx_context *request = NULL;
     size_t msg_len              = 0;
@@ -32,8 +32,6 @@ int UcpServer::runServer(const char *data_msg_str, const char *addr_msg_str, con
     size_t peer_addr_len;
 
     ucs_status_t ep_status   = UCS_OK;
-    struct err_handling err_handling_opt;
-    err_handling_opt.ucp_err_mode = UCP_ERR_HANDLING_MODE_NONE;
 
     int ret;
 
