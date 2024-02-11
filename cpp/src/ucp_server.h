@@ -16,6 +16,8 @@ public:
                   long send_msg_length);
 
 private:
+
+    void set_msg_data_len(struct msg *msg, uint64_t data_len);
     ucp_worker_h ucp_worker_;
 
 };

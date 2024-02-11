@@ -50,6 +50,6 @@ endfunction()
 
 create_target(main "src/main.cpp")
 create_target(hello_ucx "src/hello_ucx.cpp")
-# create_target(hello_ucp "src/ucp_hello_world.c")
+create_target(hello_ucp "src/ucp_hello_world.c")
 create_target(hello_epoll "src/hello_epoll.c")
 create_target(ucp_hello_v2 "src/ucp_hello_world_v2.cpp")

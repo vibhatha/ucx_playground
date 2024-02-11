@@ -13,6 +13,9 @@
 
 #include <signal.h>  /* raise */
 
+void UcpServer::set_msg_data_len(struct msg *msg, uint64_t data_len) {
+    mem_type_memcpy(&msg->data_len, &data_len, sizeof(data_len));
+}
 
 int UcpServer::runServer(const char *data_msg_str, const char *addr_msg_str, const ucp_tag_t tag,
                          const ucp_tag_t tag_mask, long send_msg_length) {
@@ -129,7 +132,7 @@ int UcpServer::runServer(const char *data_msg_str, const char *addr_msg_str, con
         // busy loop here and check.
         /* Sleep for small amount of time to ensure that client was killed
          * and peer failure handling is covered */
-        sleep(5);
+        sleep(10);
     }
 
     // This is typically done in a loop to ensure that all pending communications are processed.

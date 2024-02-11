@@ -20,6 +20,4 @@
  */
 int generate_test_string(char *str, int size);
 
-void set_msg_data_len(struct msg *msg, uint64_t data_len);
-
 #endif //MYUCXPLAYGROUND_DATA_UTIL_H

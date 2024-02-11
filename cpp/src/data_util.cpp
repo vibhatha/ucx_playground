@@ -21,3 +21,4 @@ int generate_test_string(char *str, int size) {
     free(tmp_str);
     return 0;
 }
+

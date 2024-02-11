@@ -214,19 +214,19 @@ int main(int argc, char **argv)
     close(oob_sock);
 
     err_peer_addr:
-    free(peer_addr);
+        free(peer_addr);
 
     err_addr:
-    ucp_worker_release_address(ucp_worker, local_addr);
+        ucp_worker_release_address(ucp_worker, local_addr);
 
     err_worker:
-    ucp_worker_destroy(ucp_worker);
+        ucp_worker_destroy(ucp_worker);
 
     err_cleanup:
-    ucp_cleanup(ucp_context);
+        ucp_cleanup(ucp_context);
 
     err:
-    return ret;
+        return ret;
 }
 
 void print_common_help()
