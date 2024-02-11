@@ -23,6 +23,7 @@ set(HEADER_FILES
         src/ucx_config.h
         src/ucp_client.h
         src/ucp_server.h
+        src/print_utils.h
 )
 
 set(SOURCE_FILES
@@ -32,6 +33,7 @@ set(SOURCE_FILES
         src/ucx_utils.cpp
         src/ucp_client.cpp
         src/ucp_server.cpp
+        src/print_utils.cpp
         # Add other source files here
 )
 
@@ -53,3 +55,5 @@ create_target(hello_ucx "src/hello_ucx.cpp")
 create_target(hello_ucp "src/ucp_hello_world.c")
 create_target(hello_epoll "src/hello_epoll.c")
 create_target(ucp_hello_v2 "src/ucp_hello_world_v2.cpp")
+create_target(run_ucp_client "src/simple_ucp_client.cpp")
+create_target(run_ucp_server "src/simple_ucp_server.cpp")

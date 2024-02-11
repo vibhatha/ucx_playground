@@ -41,7 +41,6 @@
 #include <ucp/api/ucp.h>
 
 #include <sys/socket.h>
-#include <sys/epoll.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -144,6 +143,9 @@ int main(int argc, char **argv)
     worker_attr.field_mask = UCP_WORKER_ATTR_FIELD_ADDRESS;
 
     status = ucp_worker_query(ucp_worker, &worker_attr);
+    if(print_config) {
+        ucp_worker_print_info(ucp_worker, stdout);
+    }
     CHKERR_JUMP(status != UCS_OK, "ucp_worker_query\n", err_worker);
     local_addr_len = worker_attr.address_length;
     local_addr     = worker_attr.address;

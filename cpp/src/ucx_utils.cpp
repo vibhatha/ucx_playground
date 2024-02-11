@@ -140,9 +140,9 @@ void ep_close(ucp_worker_h ucp_worker, ucp_ep_h ep, uint64_t flags)
 
 void request_init(void *request)
 {
-    struct ucx_context *contex = (struct ucx_context *)request;
+    struct ucx_context *context = (struct ucx_context *)request;
 
-    contex->completed = 0;
+    context->completed = 0;
 }
 
 void send_handler(void *request, ucs_status_t status, void *ctx)
