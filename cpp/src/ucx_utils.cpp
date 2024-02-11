@@ -1,5 +1,4 @@
 #include "ucx_utils.h"
-#include "ucx_config.h"
 #include "common_utils.h"
 
 int connect_common(const char *server, uint16_t server_port, sa_family_t af) {
@@ -209,10 +208,9 @@ ucs_status_t ucx_wait(ucp_worker_h ucp_worker, struct ucx_context *request,
     return status;
 }
 
-void ep_close_err_mode(ucp_worker_h ucp_worker, ucp_ep_h ucp_ep)
+void ep_close_err_mode(ucp_worker_h ucp_worker, ucp_ep_h ucp_ep, err_handling err_handling_opt)
 {
     uint64_t ep_close_flags;
-    struct err_handling err_handling_opt;
     if (err_handling_opt.ucp_err_mode == UCP_ERR_HANDLING_MODE_PEER) {
         ep_close_flags = UCP_EP_CLOSE_FLAG_FORCE;
     } else {

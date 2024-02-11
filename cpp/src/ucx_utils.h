@@ -27,6 +27,7 @@
 #  include <cuda_runtime.h>
 #endif
 
+#include "ucx_config.h"
 
 /**
  * @brief Connects to a server or sets up a server socket based on the provided parameters.
@@ -76,7 +77,7 @@ void recv_handler(void *request, ucs_status_t status,
 ucs_status_t ucx_wait(ucp_worker_h ucp_worker, struct ucx_context *request,
                       const char *op_str, const char *data_str);
 
-void ep_close_err_mode(ucp_worker_h ucp_worker, ucp_ep_h ucp_ep);
+void ep_close_err_mode(ucp_worker_h ucp_worker, ucp_ep_h ucp_ep, err_handling err_handling_opt);
 
 /**
  * @brief Flushes the endpoint.

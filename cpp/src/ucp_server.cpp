@@ -30,6 +30,7 @@ int UcpServer::runServer(const char *data_msg_str, const char *addr_msg_str, con
 
     ucs_status_t ep_status   = UCS_OK;
     struct err_handling err_handling_opt;
+    err_handling_opt.ucp_err_mode = UCP_ERR_HANDLING_MODE_PEER;
 
     int ret;
 
@@ -176,7 +177,7 @@ int UcpServer::runServer(const char *data_msg_str, const char *addr_msg_str, con
     err_free_mem_type_msg:
         mem_type_free(msg);
     err_ep:
-        ep_close_err_mode(ucp_worker_, client_ep);
+        ep_close_err_mode(ucp_worker_, client_ep, err_handling_opt);
     err:
         return ret;
 }
