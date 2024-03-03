@@ -48,10 +48,6 @@ int main(int argc, char **argv) {
   struct err_handling err_handling_opt;
   ucp_test_mode_t ucp_test_mode;
 
-  memset(&ucp_params, 0, sizeof(ucp_params));
-  memset(&worker_attr, 0, sizeof(worker_attr));
-  memset(&worker_params, 0, sizeof(worker_params));
-
   /* Parse the command line */
   status = parse_cmd(argc, argv, &client_target_name, &err_handling_opt,
                      &ucp_test_mode, print_config, server_port, ai_family,
@@ -62,16 +58,9 @@ int main(int argc, char **argv) {
   status = ucp_config_read(NULL, NULL, &config);
   CHKERR_JUMP(status != UCS_OK, "ucp_config_read\n", err);
 
-  ucp_params.field_mask = UCP_PARAM_FIELD_FEATURES |
-                          UCP_PARAM_FIELD_REQUEST_SIZE |
-                          UCP_PARAM_FIELD_REQUEST_INIT | UCP_PARAM_FIELD_NAME;
-  ucp_params.features = UCP_FEATURE_TAG;
-  if (ucp_test_mode == TEST_MODE_WAIT || ucp_test_mode == TEST_MODE_EVENTFD) {
-    ucp_params.features |= UCP_FEATURE_WAKEUP;
-  }
-  ucp_params.request_size = sizeof(struct ucx_context);
-  ucp_params.request_init = request_init;
-  ucp_params.name = "hello_world";
+  initialize_ucp_params(&ucp_params, "hello world server");
+  initialize_ucp_worker_attr(&worker_attr);
+  initialize_ucp_worker_params(&worker_params);
 
   status = ucp_init(&ucp_params, config, &ucp_context);
 
@@ -82,13 +71,8 @@ int main(int argc, char **argv) {
   ucp_config_release(config);
   CHKERR_JUMP(status != UCS_OK, "ucp_init\n", err);
 
-  worker_params.field_mask = UCP_WORKER_PARAM_FIELD_THREAD_MODE;
-  worker_params.thread_mode = UCS_THREAD_MODE_SINGLE;
-
   status = ucp_worker_create(ucp_context, &worker_params, &ucp_worker);
   CHKERR_JUMP(status != UCS_OK, "ucp_worker_create\n", err_cleanup);
-
-  worker_attr.field_mask = UCP_WORKER_ATTR_FIELD_ADDRESS;
 
   status = ucp_worker_query(ucp_worker, &worker_attr);
   if (print_config) {

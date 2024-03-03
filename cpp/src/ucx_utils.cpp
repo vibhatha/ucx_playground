@@ -332,3 +332,26 @@ ucs_status_t flush_ep(ucp_worker_h worker, ucp_ep_h ep) {
     return status;
   }
 }
+
+void initialize_ucp_params(ucp_params_t *ucp_params, const char *name) {
+  memset(ucp_params, 0, sizeof(*ucp_params));
+  ucp_params->field_mask = UCP_PARAM_FIELD_FEATURES |
+                           UCP_PARAM_FIELD_REQUEST_SIZE |
+                           UCP_PARAM_FIELD_REQUEST_INIT | UCP_PARAM_FIELD_NAME;
+  ucp_params->features = UCP_FEATURE_TAG;
+
+  ucp_params->request_size = sizeof(struct ucx_context);
+  ucp_params->request_init = request_init;
+  ucp_params->name = name;
+}
+
+void initialize_ucp_worker_attr(ucp_worker_attr_t *worker_attr) {
+  memset(worker_attr, 0, sizeof(*worker_attr));
+  worker_attr->field_mask = UCP_WORKER_ATTR_FIELD_ADDRESS;
+}
+
+void initialize_ucp_worker_params(ucp_worker_params_t *ucp_worker_params) {
+  memset(ucp_worker_params, 0, sizeof(*ucp_worker_params));
+  ucp_worker_params->field_mask = UCP_WORKER_PARAM_FIELD_THREAD_MODE;
+  ucp_worker_params->thread_mode = UCS_THREAD_MODE_SINGLE;
+}

@@ -101,7 +101,6 @@ void recv_handler(void *request, ucs_status_t status,
                   const ucp_tag_recv_info_t *info, void *user_data);
 
 /**
- * @file ucp_hello_world.c
  * @brief This file contains the implementation of the ucx_wait function.
  *        The ucx_wait function waits for a UCX request to complete on a given
  * UCX worker.
@@ -126,5 +125,27 @@ void ep_close_err_mode(ucp_worker_h ucp_worker, ucp_ep_h ucp_ep,
  * @return The status of the flush operation.
  */
 ucs_status_t flush_ep(ucp_worker_h worker, ucp_ep_h ep);
+
+/**
+ * @brief Initializes ucp_params_t.
+ *
+ * @param ucp_params pointer to the ucp_params_t
+ * @param name name assigned to the ucp_params pointer
+ * */
+void initialize_ucp_params(ucp_params_t *ucp_params, const char *name);
+
+/**
+ * @brief Initializes ucp_worker_attr_t.
+ *
+ * @param worker_attr pointer to the ucp_worker_attr_t pointer
+ * */
+void initialize_ucp_worker_attr(ucp_worker_attr_t *worker_attr);
+
+/**
+ * @brief Initializes ucp_worker_params_t.
+ *
+ * @param ucp_worker_params pointer to the ucp_worker_params_t
+ * */
+void initialize_ucp_worker_params(ucp_worker_params_t *ucp_worker_params);
 
 #endif /* UCX_HELLO_WORLD_H */
