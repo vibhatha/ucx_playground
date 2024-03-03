@@ -30,12 +30,6 @@ void print_usage() {
   fprintf(stderr, "Usage: ucp_hello_world [parameters]\n");
   fprintf(stderr, "UCP hello world client/server example utility\n");
   fprintf(stderr, "\nParameters are:\n");
-  fprintf(stderr, "  -w      Select test mode \"wait\" to test "
-                  "ucp_worker_wait function\n");
-  fprintf(stderr, "  -f      Select test mode \"event fd\" to test "
-                  "ucp_worker_get_efd function with later poll\n");
-  fprintf(stderr, "  -b      Select test mode \"busy polling\" to test "
-                  "ucp_tag_probe_nb and ucp_worker_progress (default)\n");
   fprintf(stderr, "  -n <name> Set node name or IP address "
                   "of the server (required for client and should be ignored "
                   "for server)\n");
@@ -53,8 +47,7 @@ void print_usage() {
 }
 
 ucs_status_t parse_cmd(int argc, char *const argv[], char **server_name,
-                       err_handling *err_handling_opt,
-                       ucp_test_mode_t *ucp_test_mode, int print_config,
+                       err_handling *err_handling_opt, int print_config,
                        uint16_t server_port, sa_family_t ai_family,
                        long test_string_length) {
   int c = 0, idx = 0;
@@ -62,17 +55,8 @@ ucs_status_t parse_cmd(int argc, char *const argv[], char **server_name,
   (*err_handling_opt).ucp_err_mode = UCP_ERR_HANDLING_MODE_NONE;
   (*err_handling_opt).failure_mode = FAILURE_MODE_NONE;
 
-  while ((c = getopt(argc, argv, "wfb6e:n:p:s:m:ch")) != -1) {
+  while ((c = getopt(argc, argv, "6e:n:p:s:m:ch")) != -1) {
     switch (c) {
-    case 'w':
-      *ucp_test_mode = TEST_MODE_WAIT;
-      break;
-    case 'f':
-      *ucp_test_mode = TEST_MODE_EVENTFD;
-      break;
-    case 'b':
-      *ucp_test_mode = TEST_MODE_PROBE;
-      break;
     case 'e':
       (*err_handling_opt).ucp_err_mode = UCP_ERR_HANDLING_MODE_PEER;
       if (!strcmp(optarg, "recv")) {
@@ -121,9 +105,18 @@ ucs_status_t parse_cmd(int argc, char *const argv[], char **server_name,
       return UCS_ERR_UNSUPPORTED;
     }
   }
-  fprintf(stderr,
-          "INFO: UCP_HELLO_WORLD mode = %d server = %s port = %d, pid = %d\n",
-          *ucp_test_mode, *server_name, server_port, getpid());
+
+  if (server_name != NULL) {
+    fprintf(stderr,
+            "INFO: UCP_HELLO_WORLD:CLIENT Connecting to server = %s port = %d, "
+            "pid = %d\n",
+            *server_name, server_port, getpid());
+  } else {
+    fprintf(stderr,
+            "INFO: UCP_HELLO_WORLD:Server Connecting to client port = %d, pid "
+            "= %d\n",
+            server_port, getpid());
+  }
 
   for (idx = optind; idx < argc; idx++) {
     fprintf(stderr, "WARNING: Non-option argument %s\n", argv[idx]);

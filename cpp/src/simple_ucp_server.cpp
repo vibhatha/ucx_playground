@@ -39,19 +39,18 @@ int main(int argc, char **argv) {
   /* OOB connection vars */
   uint64_t local_addr_len = 0;
   ucp_address_t *local_addr = NULL;
-  uint64_t peer_addr_len = 0;
   ucp_address_t *peer_addr = NULL;
-  char *client_target_name = NULL;
+
   int oob_sock = -1;
   int ret = -1;
 
   struct err_handling err_handling_opt;
-  ucp_test_mode_t ucp_test_mode;
+
+  UcpServer ucpServer = NULL;
 
   /* Parse the command line */
-  status = parse_cmd(argc, argv, &client_target_name, &err_handling_opt,
-                     &ucp_test_mode, print_config, server_port, ai_family,
-                     test_string_length);
+  status = parse_cmd(argc, argv, NULL, &err_handling_opt, print_config,
+                     server_port, ai_family, test_string_length);
   CHKERR_JUMP(status != UCS_OK, "parse_cmd\n", err);
 
   /* UCP initialization */
@@ -86,22 +85,21 @@ int main(int argc, char **argv) {
          local_addr_len);
 
   printf("Ready to run UCX Client\n");
-  if (client_target_name == NULL) {
-    oob_sock = connect_server(server_port, ai_family);
-    CHKERR_JUMP(oob_sock < 0, "server_connect\n", err_peer_addr);
-    printf("Server: Sending Address length\n");
-    ret = send(oob_sock, &local_addr_len, sizeof(local_addr_len), 0);
-    CHKERR_JUMP_RETVAL(ret != (int)sizeof(local_addr_len),
-                       "send address length\n", err_peer_addr, ret);
 
-    printf("Server: Sending Address\n");
-    ret = send(oob_sock, local_addr, local_addr_len, 0);
-    CHKERR_JUMP_RETVAL(ret != (int)local_addr_len, "send address\n",
-                       err_peer_addr, ret);
-    UcpServer ucpServer(ucp_worker);
-    ret = ucpServer.runServer(data_msg_str, addr_msg_str, tag, tag_mask,
-                              test_string_length, err_handling_opt);
-  }
+  oob_sock = connect_server(server_port, ai_family);
+  CHKERR_JUMP(oob_sock < 0, "server_connect\n", err_peer_addr);
+  printf("Server: Sending Address length\n");
+  ret = send(oob_sock, &local_addr_len, sizeof(local_addr_len), 0);
+  CHKERR_JUMP_RETVAL(ret != (int)sizeof(local_addr_len),
+                     "send address length\n", err_peer_addr, ret);
+
+  printf("Server: Sending Address\n");
+  ret = send(oob_sock, local_addr, local_addr_len, 0);
+  CHKERR_JUMP_RETVAL(ret != (int)local_addr_len, "send address\n",
+                     err_peer_addr, ret);
+  ucpServer = UcpServer(ucp_worker);
+  ret = ucpServer.runServer(data_msg_str, addr_msg_str, tag, tag_mask,
+                            test_string_length, err_handling_opt);
 
   if (!ret && (err_handling_opt.failure_mode == FAILURE_MODE_NONE)) {
     /* Make sure remote is disconnected before destroying local worker */
@@ -110,9 +108,6 @@ int main(int argc, char **argv) {
 
 err_peer_addr:
   free(peer_addr);
-
-err_addr:
-  ucp_worker_release_address(ucp_worker, local_addr);
 
 err_worker:
   ucp_worker_destroy(ucp_worker);

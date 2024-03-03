@@ -53,12 +53,10 @@ int main(int argc, char **argv) {
   int ret = -1;
 
   struct err_handling err_handling_opt;
-  ucp_test_mode_t ucp_test_mode;
 
   /* Parse the command line */
   status = parse_cmd(argc, argv, &client_target_name, &err_handling_opt,
-                     &ucp_test_mode, print_config, server_port, ai_family,
-                     test_string_length);
+                     print_config, server_port, ai_family, test_string_length);
   CHKERR_JUMP(status != UCS_OK, "parse_cmd\n", err);
 
   printf("Initializing Client: %s \n", client_target_name);
@@ -114,6 +112,8 @@ int main(int argc, char **argv) {
     UcpClient ucpClient(ucp_worker, local_addr, local_addr_len, peer_addr);
     ret = ucpClient.runUcxClient(data_msg_str, addr_msg_str, test_string_length,
                                  tag, tag_mask, err_handling_opt);
+  } else {
+    CHKERR_JUMP(client_target_name == NULL, "Server name not provided", err);
   }
 
   if (!ret && (err_handling_opt.failure_mode == FAILURE_MODE_NONE)) {
