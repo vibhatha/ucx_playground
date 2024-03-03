@@ -3,7 +3,7 @@
 ## Pre-requisites
 
 Build and install UCX locally. Refer to the [UCX Github releases](https://github.com/openucx/ucx/releases).
-Pick a release that you prefer and build locally. 
+Pick a release that you prefer and build locally.
 Then include it to the `LD_LIBRARY_PATH`
 
 [UCX Documentation](https://openucx.org/documentation/)
@@ -12,6 +12,16 @@ Then include it to the `LD_LIBRARY_PATH`
 export UCX_HOME=<your-path-to-ucx>
 export LD_LIBRARY_PATH=$UCX_HOME/build/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
 export PATH=$PATH:$UCX_HOME/build/bin
+```
+
+## Create Environment
+
+```bash
+mamba create -n ucx_env python=3.9
+mamba activate ucx_env
+mamba install pre-commit
+pre-commit install
+pre-commit install --hook-type pre-push
 ```
 
 ## Build Project
@@ -32,7 +42,7 @@ cd cpp/build
 ```
 ## Run UCX Hello World By NVidia
 
-This example has been adopted from examples in UCX Github. 
+This example has been adopted from examples in UCX Github.
 
 Terminal 1: Running server
 
@@ -48,7 +58,7 @@ cd cpp/build
 ./hello_ucp -n 0.0.0.0
 ```
 
-## Server/Client Progam
+## Server/Client Program
 
 ```bash
 ./run_ucp_server

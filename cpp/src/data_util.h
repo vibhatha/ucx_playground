@@ -5,14 +5,14 @@
 #ifndef MYUCXPLAYGROUND_DATA_UTIL_H
 #define MYUCXPLAYGROUND_DATA_UTIL_H
 
-#include <cstdint>
 #include "memory_utils.h"
-
+#include <cstdint>
 
 /**
  * Generates a test string.
  *
- * This function generates a test string and stores it in the provided character array.
+ * This function generates a test string and stores it in the provided character
+ * array.
  *
  * @param str The character array to store the generated string.
  * @param size The size of the character array.
@@ -20,4 +20,4 @@
  */
 int generate_test_string(char *str, int size);
 
-#endif //MYUCXPLAYGROUND_DATA_UTIL_H
+#endif // MYUCXPLAYGROUND_DATA_UTIL_H
