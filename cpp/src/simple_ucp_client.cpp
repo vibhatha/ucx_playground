@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
 
   printf("Ready to run UCX Client\n");
   if (client_target_name != NULL) {
-    oob_sock = connect_common(client_target_name, server_port, ai_family);
+    oob_sock = connect_client(client_target_name, server_port, ai_family);
     CHKERR_JUMP(oob_sock < 0, "client_connect\n", err_addr);
 
     printf("Client: Receiving Address length\n");

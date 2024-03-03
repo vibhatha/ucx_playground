@@ -94,6 +94,100 @@ err_close_sockfd:
   goto out_free_res;
 }
 
+int connect_server(uint16_t server_port, sa_family_t af) {
+  int sockfd = -1;
+  int listenfd = -1;
+  int optval = 1;
+  char service[8];
+  struct addrinfo hints, *res, *t;
+  int ret;
+
+  snprintf(service, sizeof(service), "%u", server_port);
+  memset(&hints, 0, sizeof(hints));
+  hints.ai_flags = AI_PASSIVE;
+  hints.ai_family = af;
+  hints.ai_socktype = SOCK_STREAM;
+
+  ret = getaddrinfo(NULL, service, &hints, &res);
+  CHKERR_JUMP(ret < 0, "getaddrinfo() failed", out);
+
+  for (t = res; t != NULL; t = t->ai_next) {
+    sockfd = socket(t->ai_family, t->ai_socktype, t->ai_protocol);
+    if (sockfd < 0) {
+      continue;
+    }
+
+    printf("Attempting to Connect as a Server\n");
+    ret = setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+    CHKERR_JUMP(ret < 0, "server setsockopt()", err_close_sockfd);
+
+    if (bind(sockfd, t->ai_addr, t->ai_addrlen) == 0) {
+      printf("Bind Successful\n");
+      ret = listen(sockfd, 0);
+      CHKERR_JUMP(ret < 0, "listen server", err_close_sockfd);
+
+      /* Accept next connection */
+      fprintf(stdout, "Waiting for connection...\n");
+      listenfd = sockfd;
+      sockfd = accept(listenfd, NULL, NULL);
+      printf("Accepting a connection: %d\n", listenfd);
+      close(listenfd);
+      break;
+    }
+
+    close(sockfd);
+    sockfd = -1;
+  }
+
+  return sockfd;
+
+out_free_res:
+  freeaddrinfo(res);
+out:
+  return sockfd;
+err_close_sockfd:
+  close(sockfd);
+  sockfd = -1;
+  goto out_free_res;
+}
+
+int connect_client(const char *server, uint16_t server_port, sa_family_t af) {
+  int sockfd = -1;
+  char service[8];
+  struct addrinfo hints, *res, *t;
+  int ret;
+
+  snprintf(service, sizeof(service), "%u", server_port);
+  memset(&hints, 0, sizeof(hints));
+  hints.ai_flags = 0;
+  hints.ai_family = af;
+  hints.ai_socktype = SOCK_STREAM;
+
+  ret = getaddrinfo(server, service, &hints, &res);
+  CHKERR_JUMP(ret < 0, "getaddrinfo() failed", out);
+
+  for (t = res; t != NULL; t = t->ai_next) {
+    sockfd = socket(t->ai_family, t->ai_socktype, t->ai_protocol);
+    if (sockfd < 0) {
+      continue;
+    }
+
+    printf("Server Name: %s\n", server);
+    printf("Attempting to connect as a Client\n");
+    if (connect(sockfd, t->ai_addr, t->ai_addrlen) == 0) {
+      break;
+    }
+
+    close(sockfd);
+    sockfd = -1;
+  }
+
+  return sockfd;
+
+out:
+  return sockfd;
+}
+
 int barrier(int oob_sock, void (*progress_cb)(void *arg), void *arg) {
   struct pollfd pfd;
   int dummy = 0;

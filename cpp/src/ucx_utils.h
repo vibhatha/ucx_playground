@@ -46,6 +46,38 @@
  */
 int connect_common(const char *server, uint16_t server_port, sa_family_t af);
 
+/**
+ * @brief Connects to a server.
+ *
+ * This function creates a socket and attempts to connect to a server if the
+ * `server` parameter is not NULL. If the `server` parameter is NULL, it sets up
+ * a server socket by binding to the specified address and port, and waits for a
+ * client to connect.
+ *
+ * @param server The server address to connect to. Set to NULL to set up a
+ * server socket.
+ * @param server_port The port number of the server.
+ * @param af The address family (e.g., AF_INET, AF_INET6) to use for the socket.
+ * @return The socket file descriptor on success, or -1 on failure.
+ */
+int connect_client(const char *server, uint16_t server_port, sa_family_t af);
+
+/**
+ * @brief Sets up a server socket based on the provided parameters.
+ *
+ * This function creates a socket and attempts to connect to a server if the
+ * `server` parameter is not NULL. If the `server` parameter is NULL, it sets up
+ * a server socket by binding to the specified address and port, and waits for a
+ * client to connect.
+ *
+ * @param server The server address to connect to. Set to NULL to set up a
+ * server socket.
+ * @param server_port The port number of the server.
+ * @param af The address family (e.g., AF_INET, AF_INET6) to use for the socket.
+ * @return The socket file descriptor on success, or -1 on failure.
+ */
+int connect_server(uint16_t server_port, sa_family_t af);
+
 int barrier(int oob_sock, void (*progress_cb)(void *arg), void *arg);
 
 /**

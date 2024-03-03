@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
 
   printf("Ready to run UCX Client\n");
   if (client_target_name == NULL) {
-    oob_sock = connect_common(NULL, server_port, ai_family);
+    oob_sock = connect_server(server_port, ai_family);
     CHKERR_JUMP(oob_sock < 0, "server_connect\n", err_peer_addr);
     printf("Server: Sending Address length\n");
     ret = send(oob_sock, &local_addr_len, sizeof(local_addr_len), 0);
