@@ -120,6 +120,8 @@ int UcpServer::runServer(const char *data_msg_str, const char *addr_msg_str,
   ret = (err_handling_opt.failure_mode != FAILURE_MODE_NONE) ? 0 : -1;
   CHKERR_ACTION(status != UCS_OK, "ucp_ep_create\n", goto err);
 
+  // FIXME: we should decide this in the server, that's fine, but this must also
+  //    be communicated to the client program via a message.
   msg_len = sizeof(*msg) + send_msg_length;
   msg = static_cast<struct msg *>(mem_type_malloc(msg_len));
   CHKERR_ACTION(msg == NULL, "allocate memory\n", ret = -1; goto err_ep);

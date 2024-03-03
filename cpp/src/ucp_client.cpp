@@ -170,6 +170,8 @@ int UcpClient::runUcxClient(const char *data_msg_str, const char *addr_msg_str,
     goto err_ep;
   }
 
+  // FIXME: in theory, we should also send the `send_msg_length` from the server
+  // to client.
   str = static_cast<char *>(calloc(1, send_msg_length));
   if (str == NULL) {
     fprintf(stderr, "Memory allocation failed\n");
