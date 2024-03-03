@@ -6,11 +6,6 @@ repos:
         name: clang-format
         types_or: [c, c++, cuda]
         args: [-i]
-      - id: clang-tidy
-        files: \.cpp$
-        args: [-p=build]
-        # clang-tidy can be slow, do not run for every commit
-        stages: [push]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.3.0  # Use the latest version
